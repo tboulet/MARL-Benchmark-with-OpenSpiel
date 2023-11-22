@@ -1,0 +1,23 @@
+# Training configuration for inRL
+seed: 1234
+verbose: 2
+do_wandb: False
+n_episodes_training: 10000
+n_episodes_evaluation: 1000
+
+
+
+metrics:
+  
+  vs_random:
+    eval_frequency: 100
+    n_evaluation_episodes: 100
+
+  # vs_human:
+  #   eval_frequency: start  # end, start, or an integer
+  #   n_evaluation_episodes: 1
+
+
+defaults:
+  - algo: dqn
+  - env: connect_four

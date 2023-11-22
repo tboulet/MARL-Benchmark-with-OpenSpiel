@@ -1,0 +1,10 @@
+tqdm
+matplotlib
+wandb
+hydra-core
+
+numpy
+torch
+torchvision
+torchaudio
+
