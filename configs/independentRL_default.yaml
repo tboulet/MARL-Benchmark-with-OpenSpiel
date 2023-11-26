@@ -1,7 +1,10 @@
 # Training configuration for inRL
-seed: 1234
+seed: Null
 verbose: 2
+tqdm_bar : True
 do_wandb: False
+do_tb : True
+do_cli : True
 n_episodes_training: 10000
 n_episodes_evaluation: 1000
 

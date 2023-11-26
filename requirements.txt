@@ -1,6 +1,7 @@
 tqdm
 matplotlib
 wandb
+tensorboard
 hydra-core
 
 numpy

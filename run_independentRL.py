@@ -1,9 +1,9 @@
 # Utils import
+import datetime
 from typing import Any, Callable, Dict, List, TypeVar
 import numpy as np
 
 from tqdm import tqdm
-import wandb
 
 from hydra import main
 from omegaconf import DictConfig, OmegaConf
@@ -39,13 +39,15 @@ metric_name_to_metric_class : Dict[str, TypeVar("core.metrics.Metric")] = {
 @main(version_base=None, config_path="configs", config_name="independentRL_default")
 def main(config: DictConfig):
     
-    # Initialize training constants
+    # Initialize training parameters
     config = OmegaConf.to_container(config, resolve=True)
     verbose : int = config["verbose"]
+    tqdm_bar : bool = config["tqdm_bar"]
     do_wandb : bool = config["do_wandb"]
-    seed : int = config["seed"]
+    do_tb : bool = config["do_tb"]
+    do_cli : bool = config["do_cli"]
+    seed : int = config["seed"] if config["seed"] is not None else np.random.randint(0, 1000)
     n_episodes_training : int = config["n_episodes_training"]
-    n_episodes_evaluation : int = config["n_episodes_evaluation"]
     
     
     
@@ -82,22 +84,24 @@ def main(config: DictConfig):
             state_representation_size = n_observation_size,
             num_actions = n_actions,
             **config["algo"]["config"],
-            # device = config.device,  # doesnt work yet
             )
         for player_id in range(n_players)
     ]
     
     
     
-    # Initialize WandB
+    # Initialize loggers
+    run_name = f"[{algo_name}]_[{game_name}]_{datetime.datetime.now().strftime('%dth%mmo%Hh%Mmin%Ss')}_seed{seed}"
     if do_wandb:
-        run_name = f"[{algo_name}]_[{game_name}]_{np.random.randint(0, 1000)}"
+        import wandb
         run = wandb.init(
             project="IndependentRL Benchmark", 
             config=config,
             name=run_name,
             )
-    
+    if do_tb:
+        from torch.utils.tensorboard import SummaryWriter
+        tb_writer = SummaryWriter(log_dir = f"tensorboard/{run_name}")
     
     
     # Initialize the metrics objects
@@ -109,13 +113,24 @@ def main(config: DictConfig):
     
         
     # Train the agents in self-play.
-    print("Training...")
-    for episode_idx in tqdm(range(n_episodes_training)):
-        # Evaluate the agents
+    print(f"Training {algo_name} agents in IndependentRL on {game_name} for {n_episodes_training} episodes...")
+    iterator = tqdm(range(n_episodes_training)) if tqdm_bar else range(n_episodes_training)
+    for episode_idx in iterator:
+        
+        # Evaluate the agents and log returned metrics
         for metric_name in metric_name_to_metric:
             metric : Metric = metric_name_to_metric[metric_name]
-            metric.evaluate(agents = agents, episode_idx = episode_idx)
+            metrics_dict = metric.evaluate(agents = agents, episode_idx = episode_idx)
             
+            if do_wandb:
+                wandb.log(metrics_dict, step = episode_idx)
+            if do_tb:
+                for metric_name in metrics_dict:
+                    tb_writer.add_scalar(f"{metric_name}", metrics_dict[metric_name], global_step = episode_idx)
+            if do_cli:
+                if len(metrics_dict) > 0:
+                    print(f"Metrics at episode {episode_idx} : {metrics_dict}")
+                   
         # Train for one episode
         time_step = env.reset()
         while not time_step.last():
@@ -125,8 +140,15 @@ def main(config: DictConfig):
             time_step = env.step([agent_output.action])
         for agent in agents:
             agent.step(time_step) # Episode is over, step all agents with final info state.
-            
+    
+    
+    
+    # Close WandB and Tensorboard        
     print("End of the run.")
+    if do_wandb:
+        run.finish()
+    if do_tb:
+        tb_writer.close()
     
     
 if __name__ == "__main__":

@@ -4,6 +4,8 @@ venv*
 outputs/
 data/
 wandb/
+tensorboard/
+logs/
 personal*
 
 
