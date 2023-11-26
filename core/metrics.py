@@ -1,21 +1,31 @@
+from abc import abstractmethod, ABC
 from time import sleep
-from typing import List
-from matplotlib.pylab import f
+from typing import Dict, List
 
 from omegaconf import DictConfig
-import wandb
 from open_spiel.python import rl_agent, rl_environment
 import numpy as np
 
 
 
-class Metric:
+class Metric(ABC):
+    """The base class for all metrics."""
     def __init__(self, config : DictConfig, training_env : rl_environment.Environment) -> None:
-        self.training_env = training_env
+        self.training_env = training_env  # WARNING: should we use a separate environment for evaluation?
         self.config = config
 
-    def evaluate(agents):
-        raise NotImplementedError
+    @abstractmethod
+    def evaluate(agents : List[rl_agent.AbstractAgent], episode_idx : int) -> Dict[str, float]:
+        """The evaluation function.
+
+        Args:
+            agents (List[rl_agent.AbstractAgent]): the list of the agents to evaluate, in the same order as in the environment.
+            episode_idx (int): the current episode index
+            
+        Returns:
+            Dict[str, float]: a dictionary of the metrics to return at each evaluation step, with the name of the metric as key and the value of the metric as value.
+        """
+        return {}
 
 
 
@@ -43,8 +53,10 @@ class VsRandomMetric(Metric):
             agents (List[rl_agent.AbstractAgent]): the agents to evaluate
             episode_idx (int): the current episode index
         """
-        if episode_idx % self.eval_frequency == 0:
-            
+        if not episode_idx % self.eval_frequency == 0:
+            return {}
+        
+        else:
             env = self.training_env   # WARNING: should we use a separate environment for evaluation?
             num_players = env.num_players
             num_actions = env.action_spec()["num_actions"]
@@ -72,17 +84,12 @@ class VsRandomMetric(Metric):
             std_G_0 = np.std(G_0s)
             victory_rate = np.mean(are_victories)
             
-            if self.config["do_wandb"]:
-                wandb.log({
+            return {
                     "episode_idx": episode_idx,
                     "mean_reward_vs_random": mean_G_0,
                     "std_reward_vs_random": std_G_0,
                     "victory_percentage_vs_random": victory_rate,
-                }, step=episode_idx)
-            # if self.config.do_tensorboard_log:
-            #     pass # TODO
-            # if self.config.do_cli_log:
-            #     pass # TODO
+                }
 
 
 
@@ -122,7 +129,6 @@ class VsHumanMetric(Metric):
             episode_idx (int): the current episode index
         """
         if self.is_episode_idx_to_evaluate(episode_idx=episode_idx):
-            
             env = self.training_env   # WARNING: should we use a separate environment for evaluation?
             num_players = env.num_players
             num_actions = env.action_spec()["num_actions"]
@@ -156,4 +162,5 @@ class VsHumanMetric(Metric):
                         print("Result : Human wins !")
                     else:
                         print("Result : Draw.")
-                            
+        
+        return {}   # this metric does not return anything, it only faces the human and prints stuff                 
