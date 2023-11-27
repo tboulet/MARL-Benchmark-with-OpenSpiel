@@ -1,0 +1,3 @@
+defaults:
+  - algo:
+    - a2c

@@ -1,0 +1,6 @@
+vs_human :
+  name : vs_human
+  config : 
+    eval_frequency: end
+    n_episodes_evaluation: 100
+    human_id : 0

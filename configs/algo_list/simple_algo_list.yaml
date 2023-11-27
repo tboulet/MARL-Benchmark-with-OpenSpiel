@@ -1,7 +1,0 @@
-defaults:
-  - algo_individual:
-    - dqn
-    - ppo
-    
-host: localhost
-port: 443

@@ -10,17 +10,8 @@ n_episodes_evaluation: 1000
 
 
 
-metrics:
-  
-  vs_random:
-    eval_frequency: 100
-    n_evaluation_episodes: 100
-
-  # vs_human:
-  #   eval_frequency: start  # end, start, or an integer
-  #   n_evaluation_episodes: 1
-
 
 defaults:
-  - algo: dqn
-  - env: connect_four
+  - algos/simple_algos
+  - metric_list/main_metrics
+  - env : connect_four

@@ -1,7 +1,7 @@
 # MARL-Benchmark-with-OpenSpiel
 A research project for MARL and Game Theory algorithms, using the DeepMind framework OpenSpiel.
 
-The codebase is in Python, in particular we use Pytorch as our deep learning framework, Hydra as our configuration system and WandB for logging metrics.
+The codebase is in Python, in particular we use Pytorch as our deep learning framework, Hydra as our configuration system and WandB and tensorboard for logging metrics.
 
 
 
@@ -80,7 +80,7 @@ pip install -r requirements.txt
 
 ### Set up WandB
 
-This repo use WandB for logging metrics. Follow the [WandB quickstart](https://docs.wandb.ai/quickstart).
+If you want to use WandB for logging metrics, follow the [WandB quickstart](https://docs.wandb.ai/quickstart) and put `do_wandb : True` in the config file.
 
 
 ### Have Pylance detect OpenSpiel
@@ -111,7 +111,13 @@ For understanding the code, notebooks can be found in `open_spiel/open_spiel/col
 For training algorithm `algo` (e.g. `dqn`, `ppo`, `a2c`) on a certain environment/game `game` (e.g. `tic_tac_toe`, `connect_four`), run the command :
 
 ```bash
-python run_independentRL.py algo=ppo env=connect_four
+python run_independentRL.py algos/algo=ppo env=connect_four
 ```
 
-We use Hydra as our config system. The config folder is `./configs`. You can modify the config (logging, metrics, number of training episodes) from the `independentRL_default.yaml` file. The available algorithms are in the `algo` sub-folder and the available environments are in the `env` sub-folder. 
+For training several algorithms at the same time (e.g. `ppo` and `dqn`) on a certain environment/game `game` (e.g. `tic_tac_toe`, `connect_four`), run the command :
+
+```bash
+python run_independentRL.py algos/algo=[ppo,dqn] env=connect_four
+```
+
+We use Hydra as our config system. The config folder is `./configs`. You can modify the config (logging, metrics, number of training episodes) from the `independentRL_default.yaml` file. The available algorithms are in the `algos/algo` sub-folder and the available environments are in the `env` sub-folder. 

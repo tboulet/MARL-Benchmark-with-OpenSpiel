@@ -1,0 +1,5 @@
+defaults:
+  - algo:
+    - dqn
+    - ppo
+    - a2c
