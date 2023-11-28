@@ -35,6 +35,8 @@ class VsRandomMetric(Metric):
         - only focus on the first agent (we could do average, min and max, or all) (TODO)
         - assume this agent starts to play every game (we could randomize the order) (TODO)
 
+        Complexity : O(n_episodes_evaluation * L * (K * C_one_step_env + sum_k(C_one_step_agent_k_eval))
+        
         Args:
             algo_name_to_grouped_agents (Dict[str, List[rl_agent.AbstractAgent]]): the agents to evaluate, grouped by algorithm
             envs (List[rl_environment.Environment]): the environments to evaluate the agents in
@@ -76,17 +78,18 @@ class VsRandomMetric(Metric):
             victory_rate = np.mean(are_victories)
             
             return {
-                    "episode_idx": episode_idx,
                     "mean_reward_vs_random": mean_G_0,
                     "std_reward_vs_random": std_G_0,
                     "victory_percentage_vs_random": victory_rate,
                 }
 
 
-        return evaluate_each_group_independently(
+        metrics_dict = evaluate_each_group_independently(
             algo_name_to_grouped_agents=algo_name_to_grouped_agents,
             envs=envs,
             evaluate_group_function=evaluate_group_function_vs_random,
         )
+        metrics_dict["episode_idx"] = episode_idx
+        return metrics_dict
 
 

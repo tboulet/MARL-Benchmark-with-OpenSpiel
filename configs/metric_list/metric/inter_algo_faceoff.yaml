@@ -1,0 +1,7 @@
+inter_algo_faceoff:
+  name: inter_algo_faceoff
+  config: 
+    eval_frequency: 2000
+    n_episodes_evaluation: 500
+    game_name: ${env.name}
+    game_config: ${env.config}

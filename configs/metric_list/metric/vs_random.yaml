@@ -1,5 +1,5 @@
 vs_random:
   name: vs_random
   config: 
-    eval_frequency: 100
-    n_episodes_evaluation: 100
+    eval_frequency: 2000
+    n_episodes_evaluation: 500

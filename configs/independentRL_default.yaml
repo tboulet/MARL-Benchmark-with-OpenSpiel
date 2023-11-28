@@ -2,11 +2,10 @@
 seed: Null
 verbose: 2
 tqdm_bar : True
-do_wandb: False
+do_wandb: True
 do_tb : True
 do_cli : True
-n_episodes_training: 10000
-n_episodes_evaluation: 1000
+n_episodes_training: 100000
 
 
 

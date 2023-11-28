@@ -2,3 +2,4 @@ defaults:
   - metric:
     - vs_random
     - vs_human
+    - inter_algo_faceoff

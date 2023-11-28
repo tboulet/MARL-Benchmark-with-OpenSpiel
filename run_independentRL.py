@@ -141,9 +141,11 @@ class IndependentRL_Algorithm:
             algo_name_to_grouped_agents : Dict[str, List[rl_agent.AbstractAgent]],
             envs : Dict[str, rl_environment.Environment],
             episode_idx : int,
-    ):
+    ) -> None:
         """Train each group of agents in their corressponding environment for one episode.
 
+        Complexity : O(L * (K * C_one_step_env + sum_k(C_one_step_agent_k)))
+        
         Args:
             algo_name_to_grouped_agents (Dict[str, List[rl_agent.AbstractAgent]]): the agents to train, grouped by algorithm
             envs (Dict[str, rl_environment.Environment]): the environments to train the agents in
@@ -169,6 +171,7 @@ class IndependentRL_Algorithm:
             ) -> None:
         """Evaluate the grouped agents using the metrics and log the results.
 
+        Complexity : sum over all metrics j of O(C_metric_j)
         Args:
             algo_name_to_grouped_agents : Dict[str, List[rl_agent.AbstractAgent]]: the agents to evaluate, grouped by algorithm
             envs (Dict[str, rl_environment.Environment]): the environments to evaluate the agents in
