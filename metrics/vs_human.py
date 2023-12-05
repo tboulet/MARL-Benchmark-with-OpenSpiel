@@ -129,20 +129,25 @@ class VsHumanMetric(Metric):
             return episode_idx == 0
         elif self.eval_frequency == "end":
             return episode_idx == self.config["n_episodes_training"]-1
-        else:
+        elif self.eval_frequency == "never":
+            return False
+        elif self.eval_frequency == "always":
+            return True
+        elif isinstance(self.eval_frequency, int):
             return episode_idx % self.eval_frequency == 0
-
+        else:
+            raise NotImplementedError(f"Unrecognized string eval_frequency {self.eval_frequency}")
         
     def evaluate(self, 
-            algo_name_to_grouped_agents : Dict[str, List[rl_agent.AbstractAgent]],
-            envs : Dict[str, rl_environment.Environment],
+            group_names_to_grouped_agents : Dict[str, List[rl_agent.AbstractAgent]],
+            group_names_to_envs : Dict[str, rl_environment.Environment],
             episode_idx : int,
             ) -> Dict[str, float]:
         """Evaluate each agents against human.
 
         Args:
-            algo_name_to_grouped_agents (Dict[str, List[rl_agent.AbstractAgent]]): the agents to evaluate, grouped by algorithm
-            envs (Dict[str, rl_environment.Environment]): the environments to evaluate the agents in
+            group_names_to_grouped_agents (Dict[str, List[rl_agent.AbstractAgent]]): the agents to evaluate, grouped by algorithm
+            group_names_to_envs (Dict[str, rl_environment.Environment]): the environments to evaluate the agents in
             episode_idx (int): the current episode index
             
         Returns:
@@ -157,21 +162,21 @@ class VsHumanMetric(Metric):
             
             # Human pick the opponent
             # If there is only one algorithm, we don't ask the human to choose
-            if len(algo_name_to_grouped_agents) == 1:
-                algo_name = list(algo_name_to_grouped_agents.keys())[0]
+            if len(group_names_to_grouped_agents) == 1:
+                group_name = list(group_names_to_grouped_agents.keys())[0]
                 break
             # Else, we ask the human to choose
             else:
                 while True:
-                    algo_name = input(f"Choose the opponent algorithm among {list(algo_name_to_grouped_agents.keys())} : ")
-                    if algo_name in algo_name_to_grouped_agents:
+                    group_name = input(f"Choose the opponent algorithm among {list(group_names_to_grouped_agents.keys())} : ")
+                    if group_name in group_names_to_grouped_agents:
                         break
                     else:
                         print("Invalid opponent algorithm name.")
-            print(f"Opponent algorithm : {algo_name}")
+            print(f"Opponent algorithm : {group_name}")
             
-            env = envs[algo_name]
-            evaluated_agents = algo_name_to_grouped_agents[algo_name]
+            env = group_names_to_envs[group_name]
+            evaluated_agents = group_names_to_grouped_agents[group_name]
             num_players = env.num_players
             
             time_step = env.reset()

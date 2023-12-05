@@ -20,15 +20,15 @@ class Metric(ABC):
 
     @abstractmethod
     def evaluate(
-        algo_name_to_grouped_agents : Dict[str, List[rl_agent.AbstractAgent]], 
-        envs : Dict[str, rl_environment.Environment],
+        group_names_to_grouped_agents : Dict[str, List[rl_agent.AbstractAgent]], 
+        group_names_to_envs : Dict[str, rl_environment.Environment],
         episode_idx : int,
         ) -> Dict[str, float]:
         """The evaluation function.
 
         Args:
-            algo_name_to_grouped_agents (Dict[str, List[rl_agent.AbstractAgent]]): the agents to evaluate, grouped by algorithm
-            envs : Dict[str, rl_environment.Environment]: the environments to evaluate the agents in
+            group_names_to_grouped_agents (Dict[str, List[rl_agent.AbstractAgent]]): the agents to evaluate, grouped by algorithm
+            group_names_to_envs : Dict[str, rl_environment.Environment]: the environments to evaluate the agents in
             episode_idx (int): the current episode index
             
         Returns:
@@ -39,15 +39,15 @@ class Metric(ABC):
     
 
 def evaluate_each_group_independently(
-    algo_name_to_grouped_agents : Dict[str, List[rl_agent.AbstractAgent]],
-    envs : Dict[str, rl_environment.Environment],
+    group_names_to_grouped_agents : Dict[str, List[rl_agent.AbstractAgent]],
+    group_names_to_envs : Dict[str, rl_environment.Environment],
     evaluate_group_function : Callable[[List[rl_agent.AbstractAgent], rl_environment.Environment], float],
     ) -> Dict[str, float]:
     """A wrapper for evaluating each group of agents independently.
 
     Args:
-        algo_name_to_grouped_agents (Dict[str, List[rl_agent.AbstractAgent]]): the agents to evaluate, grouped by algorithm
-        envs (Dict[str, rl_environment.Environment]): the environments to evaluate the agents in
+        group_names_to_grouped_agents (Dict[str, List[rl_agent.AbstractAgent]]): the agents to evaluate, grouped by algorithm
+        group_names_to_envs (Dict[str, rl_environment.Environment]): the environments to evaluate the agents in
         evaluate_group_function (Callable[ [List[rl_agent.AbstractAgent], rl_environment.Environment], float]): the function used to evaluate each group of agents
 
     Returns:
@@ -55,8 +55,8 @@ def evaluate_each_group_independently(
     """
     metrics_dict = {}
     
-    for algo_name, grouped_agents in algo_name_to_grouped_agents.items():
-        metrics_dict_of_algo = evaluate_group_function(grouped_agents, envs[algo_name])
+    for group_name, grouped_agents in group_names_to_grouped_agents.items():
+        metrics_dict_of_algo = evaluate_group_function(grouped_agents, group_names_to_envs[group_name])
         for metric_name, metric_value in metrics_dict_of_algo.items():
-            metrics_dict[f"{metric_name}/{algo_name}"] = metric_value
+            metrics_dict[f"{metric_name}/{group_name}"] = metric_value
     return metrics_dict

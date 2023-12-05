@@ -3,3 +3,4 @@ vs_random:
   config: 
     eval_frequency: 2000
     n_episodes_evaluation: 500
+    evaluated_player_id: 0

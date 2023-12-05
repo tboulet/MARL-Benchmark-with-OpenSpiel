@@ -1,3 +1,0 @@
-dqn:
-  name: dqn
-  config: {batch_size : 128}

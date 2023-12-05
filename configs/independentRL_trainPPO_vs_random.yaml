@@ -1,0 +1,34 @@
+# Training configuration for inRL
+seed: Null
+verbose: 2
+tqdm_bar : True
+do_wandb: True
+do_tb : True
+do_cli : True
+n_episodes_training: 100000
+
+
+agents:
+  ppo_and_random:
+    - ppo
+    - random
+
+
+env : 
+  name : connect_four
+  config : {}
+
+
+metric_list:
+  metric:
+    vs_random:
+      name: vs_random
+      config: 
+        eval_frequency: 2000
+        n_episodes_evaluation: 500
+        evaluated_player_id: 0
+
+
+
+
+defaults: []

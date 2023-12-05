@@ -55,10 +55,10 @@ class IndependentRL_Algorithm:
         # Create the k environments, k being the number of algorithms
         self.game_name = self.config["env"]["name"]
         self.game_config = self.config["env"]["config"]
-        self.n_algorithms = len(self.config["algos"]["algo"])
-        assert self.n_algorithms > 0, "No algorithm specified in the config file."
-        envs = {algo_name : rl_environment.Environment(self.game_name, **self.game_config) for algo_name in self.config["algos"]["algo"]}
-        env = envs[list(envs.keys())[0]]
+        self.n_groups = len(self.config["agents"])
+        assert self.n_groups > 0, "No algorithm specified in the config file."
+        group_names_to_envs = {group_name : rl_environment.Environment(self.game_name, **self.game_config) for group_name in self.config["agents"]}
+        env = group_names_to_envs[list(group_names_to_envs.keys())[0]]
         
         self.n_players = env.num_players
         self.n_actions = env.action_spec()["num_actions"]
@@ -69,7 +69,7 @@ class IndependentRL_Algorithm:
 
         if self.verbose >= 1:
             print(f"\nGame name : {self.game_name}")
-            print(f"Number of algorithms (group of player with the same algo training together) : {self.n_algorithms}")
+            print(f"Number of algorithms (group of player with the same algo training together) : {self.n_groups}")
             print(f"Number of players: {self.n_players}")
             print(f"Number of actions : {self.n_actions}")
             print(f"Observation size : {self.n_observation_size}")
@@ -78,22 +78,22 @@ class IndependentRL_Algorithm:
 
 
         # Create the agents
-        self.algo_name_to_grouped_agents : Dict[str, List[rl_agent.AbstractAgent]] = {}
-        self.algos_string = '['
-        for algo_name, algo_dict in self.config["algos"]["algo"].items():
-            self.algos_string += f"{algo_name},"
-            algo_class = algo_name_to_algo_class[algo_name]
+        self.group_names_to_grouped_agents : Dict[str, List[rl_agent.AbstractAgent]] = {}
+        self.agents_grouped_repr = '['
+        for group_name, algo_names_list in self.config["agents"].items():
+            self.agents_grouped_repr += f"({','.join(algo_names_list)})"
             grouped_agents : List[rl_agent.AbstractAgent] = [
-                algo_class(
+                algo_name_to_algo_class[algo_name](
                     player_id = player_id,
                     state_representation_size = self.n_observation_size,
                     num_actions = self.n_actions,
-                    **algo_dict["config"],
+                    # **algo_config # TODO : add the possibility to specify algo config in the config file
                     )
-                for player_id in range(self.n_players)
+                for player_id, algo_name in enumerate(algo_names_list)
             ]
-            self.algo_name_to_grouped_agents[algo_name] = grouped_agents
-        self.algos_string = self.algos_string[:-1] + ']'
+            self.agents_grouped_repr = self.agents_grouped_repr[:-1] + ")"
+            self.group_names_to_grouped_agents[group_name] = grouped_agents
+        self.agents_grouped_repr += ']'
         
         
         # Initialize loggers
@@ -105,30 +105,30 @@ class IndependentRL_Algorithm:
         for metric_name, metric_dict in self.config["metric_list"]["metric"].items():
             metric_class = metric_name_to_metric_class[metric_name]
             self.metric_name_to_metric[metric_name] = metric_class(config = self.config, **metric_dict["config"])
-        # algo_name, algo_dict in self.config["algos"]["algo"]
+        
         
         # Train the agents in self-play.
-        print(f"Training {self.algos_string} agents in parallel IndependentRL on {self.game_name} for {self.n_episodes_training} episodes...")
+        print(f"Training {self.agents_grouped_repr} agents in parallel IndependentRL on {self.game_name} for {self.n_episodes_training} episodes...")
         iterator = tqdm(range(self.n_episodes_training)) if self.tqdm_bar else range(self.n_episodes_training)
         for episode_idx in iterator:
             # Evaluate at each episode
             self.evaluate_grouped_agents(
-                algo_name_to_grouped_agents = self.algo_name_to_grouped_agents,
-                envs = envs,
+                group_name_to_grouped_agents = self.group_names_to_grouped_agents,
+                envs = group_names_to_envs,
                 episode_idx = episode_idx,
                 )
                     
             # Train each group of algorithms in their corressponding environment
             self.train_grouped_agents_one_episode(
-                algo_name_to_grouped_agents = self.algo_name_to_grouped_agents, 
-                envs = envs,
+                group_names_to_grouped_agents = self.group_names_to_grouped_agents, 
+                group_names_to_envs = group_names_to_envs,
                 episode_idx = episode_idx,
                 )
             
         # Do one step of evaluation at the end
         self.evaluate_grouped_agents(
-            algo_name_to_grouped_agents = self.algo_name_to_grouped_agents,
-            envs = envs,
+            group_name_to_grouped_agents = self.group_names_to_grouped_agents,
+            envs = group_names_to_envs,
             episode_idx = self.n_episodes_training,
             )
         
@@ -138,8 +138,8 @@ class IndependentRL_Algorithm:
     
     
     def train_grouped_agents_one_episode(self,
-            algo_name_to_grouped_agents : Dict[str, List[rl_agent.AbstractAgent]],
-            envs : Dict[str, rl_environment.Environment],
+            group_names_to_grouped_agents : Dict[str, List[rl_agent.AbstractAgent]],
+            group_names_to_envs : Dict[str, rl_environment.Environment],
             episode_idx : int,
     ) -> None:
         """Train each group of agents in their corressponding environment for one episode.
@@ -147,12 +147,12 @@ class IndependentRL_Algorithm:
         Complexity : O(L * (K * C_one_step_env + sum_k(C_one_step_agent_k)))
         
         Args:
-            algo_name_to_grouped_agents (Dict[str, List[rl_agent.AbstractAgent]]): the agents to train, grouped by algorithm
-            envs (Dict[str, rl_environment.Environment]): the environments to train the agents in
+            group_names_to_grouped_agents (Dict[str, List[rl_agent.AbstractAgent]]): the agents to train, grouped by algorithm
+            group_names_to_envs (Dict[str, rl_environment.Environment]): the environments to train the agents in
             episode_idx (int): the episode index
         """
-        for k, (algo_name, grouped_agents) in enumerate(algo_name_to_grouped_agents.items()):
-            env = envs[algo_name]
+        for group_name, grouped_agents in group_names_to_grouped_agents.items():
+            env = group_names_to_envs[group_name]
             time_step = env.reset()
             while not time_step.last():
                 player_id = time_step.observations["current_player"]
@@ -165,7 +165,7 @@ class IndependentRL_Algorithm:
                   
                     
     def evaluate_grouped_agents(self, 
-            algo_name_to_grouped_agents : Dict[str, List[rl_agent.AbstractAgent]],
+            group_name_to_grouped_agents : Dict[str, List[rl_agent.AbstractAgent]],
             envs : Dict[str, rl_environment.Environment],
             episode_idx : int,
             ) -> None:
@@ -173,15 +173,15 @@ class IndependentRL_Algorithm:
 
         Complexity : sum over all metrics j of O(C_metric_j)
         Args:
-            algo_name_to_grouped_agents : Dict[str, List[rl_agent.AbstractAgent]]: the agents to evaluate, grouped by algorithm
+            group_name_to_grouped_agents : Dict[str, List[rl_agent.AbstractAgent]]: the agents to evaluate, grouped by algorithm
             envs (Dict[str, rl_environment.Environment]): the environments to evaluate the agents in
             episode_idx (int): the episode index
         """
         for metric_name in self.metric_name_to_metric:
             metric : Metric = self.metric_name_to_metric[metric_name]
             metrics_dict = metric.evaluate(
-                algo_name_to_grouped_agents = algo_name_to_grouped_agents,
-                envs = envs,
+                group_names_to_grouped_agents = group_name_to_grouped_agents,
+                group_names_to_envs = envs,
                 episode_idx = episode_idx,
                 )
             
@@ -197,7 +197,7 @@ class IndependentRL_Algorithm:
                         
     
     def initialize_loggers(self):
-        self.run_name = f"inRL_{self.algos_string}_[{self.game_name}]_{datetime.datetime.now().strftime('%dth%mmo_%Hh%Mmin%Ss')}_seed{self.seed}"
+        self.run_name = f"inRL_{self.agents_grouped_repr}_[{self.game_name}]_{datetime.datetime.now().strftime('%dth%mmo_%Hh%Mmin%Ss')}_seed{self.seed}"
         print(f"\nRun name : {self.run_name}")
         if self.do_wandb:
             import wandb
@@ -224,7 +224,7 @@ class IndependentRL_Algorithm:
                         
 @main(version_base=None, config_path="configs", config_name="independentRL_default.yaml")
 def main(config: DictConfig):
-    
+    print(OmegaConf.to_yaml(config))
     config = OmegaConf.to_container(config, resolve=True)
     game_theory_algorithm = IndependentRL_Algorithm(config = config)
     game_theory_algorithm.run()

@@ -29,15 +29,15 @@ class InterAlgoFaceoffMetric(Metric):
         
     
     def evaluate(self, 
-            algo_name_to_grouped_agents : Dict[str, List[rl_agent.AbstractAgent]],
-            envs : List[rl_environment.Environment],
+            group_names_to_grouped_agents : Dict[str, List[rl_agent.AbstractAgent]],
+            group_names_to_envs : List[rl_environment.Environment],
             episode_idx : int,
             ) -> Dict[str, float]:
         """Evaluate the different algorithms against each other.
 
         Args:
-            algo_name_to_grouped_agents (Dict[str, List[rl_agent.AbstractAgent]]): the agents to evaluate, grouped by algorithm
-            envs (List[rl_environment.Environment]): the environments to evaluate the agents in
+            group_names_to_grouped_agents (Dict[str, List[rl_agent.AbstractAgent]]): the agents to evaluate, grouped by algorithm
+            group_names_to_envs (List[rl_environment.Environment]): the environments to evaluate the agents in
             episode_idx (int): the current episode index
 
         Returns:
@@ -48,19 +48,21 @@ class InterAlgoFaceoffMetric(Metric):
             return {}
         
         metrics_dict = {}
-        list_algo_name_and_grouped_agents = list(algo_name_to_grouped_agents.items())
-        for algo1_idx, (algo1_name, grouped_agents1) in enumerate(list_algo_name_and_grouped_agents):
+        list_group_names_and_grouped_agents = list(group_names_to_grouped_agents.items())
+        for algo1_idx, (group1_name, grouped_agents1) in enumerate(list_group_names_and_grouped_agents):
             assert len(grouped_agents1) == 2, "This metric only works for 2 player games."
-            for (algo2_name, grouped_agents2) in list_algo_name_and_grouped_agents[algo1_idx+1:]:
+            for (group2_name, grouped_agents2) in list_group_names_and_grouped_agents[algo1_idx+1:]:
                 faceoff_results_agent1_vs_agent2 = self.evaluate_two_agents(grouped_agents1[0], grouped_agents2[1])
                 faceoff_results_agent2_vs_agent1 = self.evaluate_two_agents(grouped_agents2[0], grouped_agents1[1])
+                algo1_name = self.config["agents"][group1_name][0]
+                algo2_name = self.config["agents"][group2_name][0]
                 agent1_victory_rate_playing_first = faceoff_results_agent1_vs_agent2["agentA_victory_rate"]
                 agent1_draw_rate_playing_first = faceoff_results_agent1_vs_agent2["draw_rate"]
                 agent2_victory_rate_playing_first = faceoff_results_agent2_vs_agent1["agentA_victory_rate"]
                 agent2_draw_rate_playing_first = faceoff_results_agent2_vs_agent1["draw_rate"]
 
                 # E.g. (PPO and DQN)
-                match_name = f"({algo1_name} and {algo2_name})"
+                match_name = f"({group1_name} vs {group2_name})"
                 # Metrics where the order of the agents matters
                 metrics_dict[f"{match_name}/{algo1_name}_vs_{algo2_name}_victory_rate"] = agent1_victory_rate_playing_first
                 metrics_dict[f"{match_name}/{algo1_name}_vs_{algo2_name}_draw"] = agent1_draw_rate_playing_first                   

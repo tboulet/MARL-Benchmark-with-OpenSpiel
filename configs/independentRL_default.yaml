@@ -11,6 +11,6 @@ n_episodes_training: 100000
 
 
 defaults:
-  - algos/simple_algos
-  - metric_list/main_metrics
+  - agents : rl_agents
+  - metric_list : main_metrics
   - env : connect_four
