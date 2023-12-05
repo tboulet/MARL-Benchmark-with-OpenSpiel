@@ -62,12 +62,12 @@ class InterAlgoFaceoffMetric(Metric):
                 # E.g. (PPO and DQN)
                 match_name = f"({algo1_name} and {algo2_name})"
                 # Metrics where the order of the agents matters
-                metrics_dict[f"{match_name}/{algo1_name}_vs_{algo2_name}_victory_rate"] = agent1_victory_rate_playing_first  # 0.94
+                metrics_dict[f"{match_name}/{algo1_name}_vs_{algo2_name}_victory_rate"] = agent1_victory_rate_playing_first
                 metrics_dict[f"{match_name}/{algo1_name}_vs_{algo2_name}_draw"] = agent1_draw_rate_playing_first                   
                 metrics_dict[f"{match_name}/{algo2_name}_vs_{algo1_name}_victory_rate"] = agent2_victory_rate_playing_first  # 0.17
                 metrics_dict[f"{match_name}/{algo2_name}_vs_{algo1_name}_draw"] = agent2_draw_rate_playing_first
                 # Order-averaged metrics
-                agent1_victory_rate_playing_second = 1 - agent2_victory_rate_playing_first
+                agent1_victory_rate_playing_second = 1 - agent2_victory_rate_playing_first - agent2_draw_rate_playing_first
                 agent1_victory_rate = (agent1_victory_rate_playing_first + agent1_victory_rate_playing_second) / 2
                 draw_rate = (agent1_draw_rate_playing_first + agent2_draw_rate_playing_first) / 2
                 agent2_victory_rate = 1 - agent1_victory_rate - draw_rate
