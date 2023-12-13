@@ -112,7 +112,7 @@ class VsRandomMetric(Metric):
             group_names_to_envs=group_names_to_envs,
             evaluate_group_function=evaluate_group_function_vs_random,
         )
-        metrics_dict["episode_idx"] = episode_idx
+
         return metrics_dict
 
 
