@@ -3,3 +3,5 @@ defaults:
     - vs_random
     - vs_human
     - inter_algo_faceoff
+    - episode_idx
+    - exploitability
