@@ -55,9 +55,10 @@ class IndependentRL_Algorithm:
         # Create the k environments, k being the number of algorithms
         self.game_name = self.config["env"]["name"]
         self.game_config = self.config["env"]["config"]
-        self.n_groups = len(self.config["agents"])
+        self.group_names_to_grouped_agents_names : Dict[str, List[str]] = self.config["agents"]["group_names_to_grouped_agents_names"]
+        self.n_groups = len(self.group_names_to_grouped_agents_names)
         assert self.n_groups > 0, "No algorithm specified in the config file."
-        group_names_to_envs = {group_name : rl_environment.Environment(self.game_name, **self.game_config) for group_name in self.config["agents"]}
+        group_names_to_envs = {group_name : rl_environment.Environment(self.game_name, **self.game_config) for group_name in self.group_names_to_grouped_agents_names}
         env = group_names_to_envs[list(group_names_to_envs.keys())[0]]
         
         self.n_players = env.num_players
@@ -80,7 +81,7 @@ class IndependentRL_Algorithm:
         # Create the agents
         self.group_names_to_grouped_agents : Dict[str, List[rl_agent.AbstractAgent]] = {}
         self.agents_grouped_repr = '['
-        for group_name, algo_names_list in self.config["agents"].items():
+        for group_name, algo_names_list in self.group_names_to_grouped_agents_names.items():
             self.agents_grouped_repr += f"({','.join(algo_names_list)})"
             grouped_agents : List[rl_agent.AbstractAgent] = [
                 algo_name_to_algo_class[algo_name](

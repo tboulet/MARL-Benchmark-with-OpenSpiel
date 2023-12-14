@@ -11,6 +11,6 @@ n_episodes_training: 100000
 
 
 defaults:
-  - agents : rl_agents
+  - agents : three_base_rl_agents
   - metric_list : main_metrics
   - env : connect_four

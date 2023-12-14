@@ -54,8 +54,9 @@ class InterAlgoFaceoffMetric(Metric):
             for (group2_name, grouped_agents2) in list_group_names_and_grouped_agents[algo1_idx+1:]:
                 faceoff_results_agent1_vs_agent2 = self.evaluate_two_agents(grouped_agents1[0], grouped_agents2[1])
                 faceoff_results_agent2_vs_agent1 = self.evaluate_two_agents(grouped_agents2[0], grouped_agents1[1])
-                algo1_name = self.config["agents"][group1_name][0]
-                algo2_name = self.config["agents"][group2_name][0]
+                group_names_to_grouped_agents_names = self.config["agents"]["group_names_to_grouped_agents_names"]
+                algo1_name = group_names_to_grouped_agents_names[group1_name][0]
+                algo2_name = group_names_to_grouped_agents_names[group2_name][0]
                 agent1_victory_rate_playing_first = faceoff_results_agent1_vs_agent2["agentA_victory_rate"]
                 agent1_draw_rate_playing_first = faceoff_results_agent1_vs_agent2["draw_rate"]
                 agent2_victory_rate_playing_first = faceoff_results_agent2_vs_agent1["agentA_victory_rate"]
