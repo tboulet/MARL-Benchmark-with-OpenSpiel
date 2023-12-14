@@ -111,7 +111,7 @@ class InterAlgoFaceoffMetric(Metric):
                 G_0 += time_step.rewards[0]
                 G_0_adv += time_step.rewards[1]
             for agent in evaluated_agents:
-                agent.step(time_step)
+                agent.step(time_step, is_evaluation=True)
             are_victories.append(int(G_0 > G_0_adv))
             are_draws.append(int(G_0 == G_0_adv))
             

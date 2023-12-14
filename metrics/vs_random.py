@@ -92,7 +92,7 @@ class VsRandomMetric(Metric):
                     G_0_adv += time_step.rewards[1-evaluated_player_id]
                     
                 for agent in grouped_agents:
-                    agent.step(time_step)
+                    agent.step(time_step, is_evaluation=True)
                 G_0s.append(G_0)
                 are_victories.append(int(G_0 > G_0_adv))
                 
