@@ -38,7 +38,7 @@ class PPO_Adapted(PPO):
       state_representation_size : int,
       num_actions,
       # num_players,  # removed because useless
-      player_id=0,
+      player_id,
       num_envs=1,
       steps_per_batch=128,
       num_minibatches=4,
