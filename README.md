@@ -95,6 +95,8 @@ Note : for Pylance to detect the open_spiel package, you can add ./open_spiel to
 }
 ```
 
+### Some OpenSpiel bugs and how to solve them
+- For using the exploitability metric, you need to modify in ``open_spiel/open_spiel/python/algorithms/exploitability.py`` line 200 the ``on_policy_values`` into an array through ``on_policy_values = np.array(on_policy_values)``.
 
 
 # Get used to the OpenSpiel framework
@@ -120,4 +122,4 @@ For training several algorithms at the same time (e.g. `ppo` and `dqn`) on a cer
 python run_independentRL.py algos/algo=[ppo,dqn] env=connect_four
 ```
 
-We use Hydra as our config system. The config folder is `./configs`. You can modify the config (logging, metrics, number of training episodes) from the `independentRL_default.yaml` file. The available algorithms are in the `algos/algo` sub-folder and the available environments are in the `env` sub-folder. 
+We use Hydra as our config system. The config folder is `./configs`. You can modify the config (logging, metrics, number of training episodes) from the `independentRL_default.yaml` file. The available algorithms are in the `algos/algo` sub-folder and the available environments are in the `env` sub-folder.
