@@ -50,13 +50,14 @@ class IndependentRL_Algorithm:
         self.do_cli : bool = self.config["do_cli"]
         self.seed : int = self.config["seed"] if self.config["seed"] is not None else np.random.randint(0, 1000)
         self.n_episodes_training : int = self.config["n_episodes_training"]
-
+        
+        self.group_names_to_grouped_agents_names : Dict[str, List[str]] = self.config["agents"]["group_names_to_grouped_agents_names"]
+        self.n_groups : int = len(self.group_names_to_grouped_agents_names)
+        self.agents_grouped_repr : str = self.config["agents"]["name"]
         
         # Create the k environments, k being the number of algorithms
         self.game_name = self.config["env"]["name"]
         self.game_config = self.config["env"]["config"]
-        self.group_names_to_grouped_agents_names : Dict[str, List[str]] = self.config["agents"]["group_names_to_grouped_agents_names"]
-        self.n_groups = len(self.group_names_to_grouped_agents_names)
         assert self.n_groups > 0, "No algorithm specified in the config file."
         group_names_to_envs = {group_name : rl_environment.Environment(self.game_name, **self.game_config) for group_name in self.group_names_to_grouped_agents_names}
         env = group_names_to_envs[list(group_names_to_envs.keys())[0]]
@@ -80,9 +81,7 @@ class IndependentRL_Algorithm:
 
         # Create the agents
         self.group_names_to_grouped_agents : Dict[str, List[rl_agent.AbstractAgent]] = {}
-        self.agents_grouped_repr = '['
         for group_name, algo_names_list in self.group_names_to_grouped_agents_names.items():
-            self.agents_grouped_repr += f"({','.join(algo_names_list)})"
             grouped_agents : List[rl_agent.AbstractAgent] = [
                 algo_name_to_algo_class[algo_name](
                     player_id = player_id,
@@ -92,9 +91,7 @@ class IndependentRL_Algorithm:
                     )
                 for player_id, algo_name in enumerate(algo_names_list)
             ]
-            self.agents_grouped_repr = self.agents_grouped_repr[:-1] + ")"
             self.group_names_to_grouped_agents[group_name] = grouped_agents
-        self.agents_grouped_repr += ']'
         
         
         # Initialize loggers
@@ -198,7 +195,7 @@ class IndependentRL_Algorithm:
                         
     
     def initialize_loggers(self):
-        self.run_name = f"inRL_{self.agents_grouped_repr}_[{self.game_name}]_{datetime.datetime.now().strftime('%dth%mmo_%Hh%Mmin%Ss')}_seed{self.seed}"
+        self.run_name = f"inRL_[{self.agents_grouped_repr}]_[{self.game_name}]_{datetime.datetime.now().strftime('%dth%mmo_%Hh%Mmin%Ss')}_seed{self.seed}"
         print(f"\nRun name : {self.run_name}")
         if self.do_wandb:
             import wandb

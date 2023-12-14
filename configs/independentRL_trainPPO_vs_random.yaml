@@ -9,9 +9,11 @@ n_episodes_training: 100000
 
 
 agents:
-  ppo_and_random:
-    - ppo
-    - random
+  name: "(ppo,random)"
+  group_names_to_grouped_agents_names:
+    ppo_and_random:
+      - ppo
+      - random
 
 
 env : 

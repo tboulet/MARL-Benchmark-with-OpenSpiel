@@ -1,7 +1,7 @@
 # This file contains the configuration for grouping the agents.
 # This is a dictionnary with key being the group name and value being a list of agents.
 
-name: three_base_rl_agents
+name: "(dqn,dqn)(ppo,ppo)(a2c,a2c)"
 
 group_names_to_grouped_agents_names:
   dqn_grp :
