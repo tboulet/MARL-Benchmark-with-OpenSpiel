@@ -168,9 +168,12 @@ class VsHumanMetric(Metric):
             # Else, we ask the human to choose
             else:
                 while True:
-                    group_name = input(f"Choose the opponent algorithm among {list(group_names_to_grouped_agents.keys())} : ")
+                    group_name = input(f"Choose the opponent algorithm among {list(group_names_to_grouped_agents.keys()) + ['STOP']} : ")
                     if group_name in group_names_to_grouped_agents:
                         break
+                    elif group_name == "STOP":
+                        print("Stopping the evaluation against human.")
+                        return {}
                     else:
                         print("Invalid opponent algorithm name.")
             print(f"Opponent algorithm : {group_name}")
