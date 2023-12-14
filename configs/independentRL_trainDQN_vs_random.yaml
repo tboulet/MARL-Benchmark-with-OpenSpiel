@@ -4,22 +4,16 @@ verbose: 2
 tqdm_bar : True
 do_wandb: True
 do_tb : True
-do_cli : True
+do_cli : False
 n_episodes_training: 100000
 
 
 agents:
   name: "(dqn,random)"
   group_names_to_grouped_agents_names:
-    ppo_and_random:
+    dqn_and_random:
       - dqn
       - random
-
-
-env : 
-  name : connect_four
-  config : {}
-
 
 metric_list:
   metric:
@@ -29,8 +23,12 @@ metric_list:
         eval_frequency: 2000
         n_episodes_evaluation: 500
         evaluated_player_id: 0
+    episode_idx:
+      name: episode_idx
+      config: {}
 
 
 
 
-defaults: []
+defaults:
+  - env : connect_four
