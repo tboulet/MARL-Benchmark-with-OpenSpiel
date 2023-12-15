@@ -12,10 +12,18 @@ from metrics.base_metric import Metric, evaluate_each_group_independently
 
 
 class EpisodeIndexesMetric(Metric):
-    
+    """Simply log the number of training episodes already done."""
     def __init__(self, 
             config : DictConfig,
+            eval_frequency : int = 1000,
             ) -> None:
+        """Initialize the EpisodeIndexeMetric, that simply regularly log the number of training episodes already done.
+
+        Args:
+            config (DictConfig): the configuration of the run
+            eval_frequency (int, optional): the frequency of the logging. Defaults to 1000.
+        """
+        self.eval_frequency = eval_frequency
         super().__init__(config = config)
 
     def evaluate(self, 
@@ -23,7 +31,9 @@ class EpisodeIndexesMetric(Metric):
             group_names_to_envs : List[rl_environment.Environment],
             episode_idx : int,
             ) -> Dict[str, float]:
-
-        metrics_dict = {"episode_idx": episode_idx}
-        return metrics_dict
+        if not episode_idx % self.eval_frequency == 0:
+            return {}
+        else:
+            metrics_dict = {"episode_idx": episode_idx}
+            return metrics_dict
 
