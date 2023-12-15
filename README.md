@@ -78,6 +78,12 @@ cd ..
 pip install -r requirements.txt
 ```
 
+### Install Jax
+
+```
+pip install "jax[cuda11_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+```
+
 ### Set up WandB
 
 If you want to use WandB for logging metrics, follow the [WandB quickstart](https://docs.wandb.ai/quickstart) and put `do_wandb : True` in the config file.
@@ -110,16 +116,12 @@ For understanding the code, notebooks can be found in `open_spiel/open_spiel/col
 # Run the code
 
 ## IndependentRL 
-For training algorithm `algo` (e.g. `dqn`, `ppo`, `a2c`) on a certain environment/game `game` (e.g. `tic_tac_toe`, `connect_four`), run the command :
+For training your algorithms on a IndependentRL settings and in parallel (e.g. `dqn`, `ppo`, `a2c`) on a certain environment/game (e.g. `tic_tac_toe`, `connect_four`), run the command :
 
 ```bash
-python run_independentRL.py algos/algo=ppo env=connect_four
+python run_independentRL.py agents=three_base_rl_agents env=connect_four
 ```
 
-For training several algorithms at the same time (e.g. `ppo` and `dqn`) on a certain environment/game `game` (e.g. `tic_tac_toe`, `connect_four`), run the command :
-
-```bash
-python run_independentRL.py algos/algo=[ppo,dqn] env=connect_four
-```
+The agents tag should correspond to a configuration in ``configs/agents/`` where you can specify the group of agents. Each group of agents is trained in parallel in an IndependentRL settings.
 
 We use Hydra as our config system. The config folder is `./configs`. You can modify the config (logging, metrics, number of training episodes) from the `independentRL_default.yaml` file. The available algorithms are in the `algos/algo` sub-folder and the available environments are in the `env` sub-folder.
