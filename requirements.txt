@@ -8,8 +8,8 @@ numpy
 torch
 torchvision
 torchaudio
-# tensorflow
+tensorflow
 # "jax[cuda11_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
-# chex
-# dm-haiku
-# rlax
+chex
+dm-haiku==0.0.10
+rlax
