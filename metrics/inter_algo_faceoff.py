@@ -48,10 +48,12 @@ class InterAlgoFaceoffMetric(Metric):
             return {}
         
         metrics_dict = {}
+        print("[Faceoff Metric] Evaluating group of agents against each others...")
         list_group_names_and_grouped_agents = list(group_names_to_grouped_agents.items())
         for algo1_idx, (group1_name, grouped_agents1) in enumerate(list_group_names_and_grouped_agents):
             assert len(grouped_agents1) == 2, "This metric only works for 2 player games."
             for (group2_name, grouped_agents2) in list_group_names_and_grouped_agents[algo1_idx+1:]:
+                print(f"\tEvaluate position-averaged winrate of agents from {group1_name} vs agents from {group2_name} for {self.n_episodes_evaluation} episodes...")
                 faceoff_results_agent1_vs_agent2 = self.evaluate_two_agents(grouped_agents1[0], grouped_agents2[1])
                 faceoff_results_agent2_vs_agent1 = self.evaluate_two_agents(grouped_agents2[0], grouped_agents1[1])
                 group_names_to_grouped_agents_names = self.config["agents"]["group_names_to_grouped_agents_names"]

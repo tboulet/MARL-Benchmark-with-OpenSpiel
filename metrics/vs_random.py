@@ -1,8 +1,9 @@
 from abc import abstractmethod, ABC
-from time import sleep
+from time import sleep, time
 from omegaconf import DictConfig
 from typing import Dict, List, Type, Union
 import numpy as np
+from tqdm import tqdm
 
 from open_spiel.python import rl_agent, rl_environment
 from open_spiel.python.algorithms import random_agent
@@ -59,60 +60,75 @@ class VsRandomMetric(Metric):
         if not episode_idx % self.eval_frequency == 0:
             return {}
         
-        def evaluate_group_function_vs_random(grouped_agents : List[rl_agent.AbstractAgent], env : rl_environment.Environment) -> Dict[str, float]:
-            """This function evaluates a group of agents against random agents."""
-            num_players = env.num_players
-            num_actions = env.action_spec()["num_actions"]
-            random_agents = [random_agent.RandomAgent(player_id, num_actions, f"Random Agent {player_id}") for player_id in range(num_players)]
-
-            G_0s = []   # [G_0^ep | ep in [0, n_episodes_evaluation-1]]
-            are_victories = []   # [1(G_0^ep > G_0_adv^ep) | ep in [0, n_episodes_evaluation-1]]
-            
-            for episode in range(self.n_episodes_evaluation):
-                if isinstance(self.evaluated_player_id, int):
-                    evaluated_player_id = self.evaluated_player_id
-                else:
-                    evaluated_player_id = np.random.choice(self.evaluated_player_id)
-                time_step = env.reset()
-                G_0 = 0
-                G_0_adv = 0
-                while not time_step.last():
-                    player_id = time_step.observations["current_player"]
-                    
-                    if player_id == evaluated_player_id:
-                        # Evaluated agent is playing
-                        agent_output = grouped_agents[player_id].step(time_step, is_evaluation=True)   # Note the evaluation flag. A Q-learner will set epsilon=0 here.
-                        time_step = env.step([agent_output.action])
-                    else:
-                        # Random agent is playing
-                        agent_output = random_agents[player_id].step(time_step)
-                        time_step = env.step([agent_output.action])
-                    
-                    G_0 += time_step.rewards[evaluated_player_id]
-                    G_0_adv += time_step.rewards[1-evaluated_player_id]
-                    
-                for agent in grouped_agents:
-                    agent.step(time_step, is_evaluation=True)
-                G_0s.append(G_0)
-                are_victories.append(int(G_0 > G_0_adv))
-                
-            mean_G_0 = np.mean(G_0s)
-            std_G_0 = np.std(G_0s)
-            victory_rate = np.mean(are_victories)
-            
-            return {
-                    "mean_reward_vs_random": mean_G_0,
-                    "std_reward_vs_random": std_G_0,
-                    "victory_percentage_vs_random": victory_rate,
-                }
-
-
-        metrics_dict = evaluate_each_group_independently(
-            group_names_to_grouped_agents=group_names_to_grouped_agents,
-            group_names_to_envs=group_names_to_envs,
-            evaluate_group_function=evaluate_group_function_vs_random,
-        )
+        metrics_dict = {}
+        print("[VS Random Metric] Evaluating agents against random agents...")
+        for group_name, grouped_agents in group_names_to_grouped_agents.items():
+            print(f"\tEvaluating group {group_name} against random agents for {self.n_episodes_evaluation} episodes...")
+            group_metrics_dict = self.evaluate_group_function_vs_random(
+                grouped_agents=grouped_agents,
+                env=group_names_to_envs[group_name],
+                do_tqdm=False,
+            )
+            for metric_name, metric_value in group_metrics_dict.items():
+                metrics_dict[f"{metric_name}/{group_name}"] = metric_value
 
         return metrics_dict
+        
+        
+        
+    def evaluate_group_function_vs_random(self, 
+                                        grouped_agents : List[rl_agent.AbstractAgent], 
+                                        env : rl_environment.Environment,
+                                        do_tqdm : bool,
+                                    ) -> Dict[str, float]:
+        """This function evaluates a group of agents against random agents."""
+        num_players = env.num_players
+        num_actions = env.action_spec()["num_actions"]
+        random_agents = [random_agent.RandomAgent(player_id, num_actions, f"Random Agent {player_id}") for player_id in range(num_players)]
+
+        G_0s = []   # [G_0^ep | ep in [0, n_episodes_evaluation-1]]
+        are_victories = []   # [1(G_0^ep > G_0_adv^ep) | ep in [0, n_episodes_evaluation-1]]
+        
+        iterator = range(self.n_episodes_evaluation) if not do_tqdm else tqdm(range(self.n_episodes_evaluation))
+        for episode in iterator:
+            if isinstance(self.evaluated_player_id, int):
+                evaluated_player_id = self.evaluated_player_id
+            else:
+                evaluated_player_id = np.random.choice(self.evaluated_player_id)
+            time_step = env.reset()
+            G_0 = 0
+            G_0_adv = 0
+            while not time_step.last():
+                player_id = time_step.observations["current_player"]
+                
+                if player_id == evaluated_player_id:
+                    # Evaluated agent is playing
+                    agent_output = grouped_agents[player_id].step(time_step, is_evaluation=True)   # Note the evaluation flag. A Q-learner will set epsilon=0 here.
+                    time_step = env.step([agent_output.action])
+                else:
+                    # Random agent is playing
+                    agent_output = random_agents[player_id].step(time_step)
+                    time_step = env.step([agent_output.action])
+                
+                G_0 += time_step.rewards[evaluated_player_id]
+                G_0_adv += time_step.rewards[1-evaluated_player_id]
+                
+            for agent in grouped_agents:
+                agent.step(time_step, is_evaluation=True)
+            G_0s.append(G_0)
+            are_victories.append(int(G_0 > G_0_adv))
+            
+        mean_G_0 = np.mean(G_0s)
+        std_G_0 = np.std(G_0s)
+        victory_rate = np.mean(are_victories)
+        
+        return {
+                "mean_reward_vs_random": mean_G_0,
+                "std_reward_vs_random": std_G_0,
+                "victory_percentage_vs_random": victory_rate,
+            }
+
+
+        
 
 

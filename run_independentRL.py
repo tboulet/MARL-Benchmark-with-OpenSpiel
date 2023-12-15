@@ -103,25 +103,42 @@ class IndependentRL_Algorithm:
         for metric_name, metric_dict in self.config["metric_list"]["metric"].items():
             metric_class = metric_name_to_metric_class[metric_name]
             self.metric_name_to_metric[metric_name] = metric_class(config = self.config, **metric_dict["config"])
-        
+        time_training_cumulative = 0
+        time_evaluation_cumulative = 0
         
         # Train the agents in self-play.
         print(f"Training {self.agents_grouped_repr} agents in parallel IndependentRL on {self.game_name} for {self.n_episodes_training} episodes...")
         iterator = tqdm(range(self.n_episodes_training)) if self.tqdm_bar else range(self.n_episodes_training)
         for episode_idx in iterator:
             # Evaluate at each episode
+            t0 = datetime.datetime.now()
             self.evaluate_grouped_agents(
                 group_name_to_grouped_agents = self.group_names_to_grouped_agents,
                 envs = group_names_to_envs,
                 episode_idx = episode_idx,
                 )
+            time_evaluation_cumulative += (datetime.datetime.now() - t0).total_seconds()
                     
             # Train each group of algorithms in their corressponding environment
+            t0 = datetime.datetime.now()
             self.train_grouped_agents_one_episode(
                 group_names_to_grouped_agents = self.group_names_to_grouped_agents, 
                 group_names_to_envs = group_names_to_envs,
                 episode_idx = episode_idx,
                 )
+            time_training_cumulative += (datetime.datetime.now() - t0).total_seconds()
+            
+            # Log time metrics
+            time_iteration_cumulative = time_training_cumulative + time_evaluation_cumulative
+            training_proportion = time_training_cumulative / time_iteration_cumulative
+            evaluation_proportion = time_evaluation_cumulative / time_iteration_cumulative
+            time_metrics_dict = {
+                "time/training cumulative" : time_training_cumulative,
+                "time/evaluation cumulative" : time_evaluation_cumulative,
+                "time/training proportion" : training_proportion,
+                "time/evaluation proportion" : evaluation_proportion,
+                }
+            self.log_metrics(time_metrics_dict, episode_idx)
             
         # Do one step of evaluation at the end
         self.evaluate_grouped_agents(
@@ -176,25 +193,39 @@ class IndependentRL_Algorithm:
             episode_idx (int): the episode index
         """
         for metric_name in self.metric_name_to_metric:
+            t0 = datetime.datetime.now()
             metric : Metric = self.metric_name_to_metric[metric_name]
             metrics_dict = metric.evaluate(
                 group_names_to_grouped_agents = group_name_to_grouped_agents,
                 group_names_to_envs = envs,
                 episode_idx = episode_idx,
                 )
+            metrics_dict[f"time/compute metric '{metric_name}'"] = (datetime.datetime.now() - t0).total_seconds()
+            self.log_metrics(metrics_dict, episode_idx)
             
-            if self.do_wandb:
-                wandb.log(metrics_dict, step = episode_idx)
-            if self.do_tb:
-                for metric_name in metrics_dict:
-                    self.tb_writer.add_scalar(f"{metric_name}", metrics_dict[metric_name], global_step = episode_idx)
-            if self.do_cli:
-                if len(metrics_dict) > 0:
-                    print(f"Metrics at episode {episode_idx} : {metrics_dict}")
-                     
                         
     
+    def log_metrics(self, metrics_dict : Dict[str, float], episode_idx : int) -> None:
+        """Log a dictionary of metrics to the different loggers.
+
+        Args:
+            metrics_dict (Dict[str, float]): the metrics to log, as a dictionary with the metric name as key and the metric value as value
+            episode_idx (int): the training episode index
+        """
+        if self.do_wandb:
+                wandb.log(metrics_dict, step = episode_idx)
+        if self.do_tb:
+            for metric_name in metrics_dict:
+                self.tb_writer.add_scalar(f"{metric_name}", metrics_dict[metric_name], global_step = episode_idx)
+        if self.do_cli:
+            if len(metrics_dict) > 0:
+                print(f"Metrics at episode {episode_idx} : {metrics_dict}")
+                    
+                    
+                    
     def initialize_loggers(self):
+        """Initialize the loggers (e.g. WandB, Tensorboard)
+        """
         self.run_name = f"inRL_[{self.agents_grouped_repr}]_[{self.game_name}]_{datetime.datetime.now().strftime('%dth%mmo_%Hh%Mmin%Ss')}_seed{self.seed}"
         print(f"\nRun name : {self.run_name}")
         if self.do_wandb:
@@ -211,6 +242,8 @@ class IndependentRL_Algorithm:
                   
                    
     def end_run(self):
+        """End the run, including for example by closing the loggers.
+        """
         print("End of the run.")
         if self.do_wandb:
             self.wandb_run.finish()

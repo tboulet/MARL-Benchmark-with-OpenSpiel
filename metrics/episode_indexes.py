@@ -34,6 +34,7 @@ class EpisodeIndexesMetric(Metric):
         if not episode_idx % self.eval_frequency == 0:
             return {}
         else:
+            print(f"[Episode Indexes Metric] Number of training episodes done: {episode_idx}")
             metrics_dict = {"episode_idx": episode_idx}
             return metrics_dict
 
