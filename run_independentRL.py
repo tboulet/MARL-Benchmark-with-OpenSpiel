@@ -96,6 +96,7 @@ class IndependentRL_Algorithm:
         
         # Initialize loggers
         self.initialize_loggers()
+        self.config["game_theory_algorithm"] = self
         
         
         # Initialize the metrics objects
