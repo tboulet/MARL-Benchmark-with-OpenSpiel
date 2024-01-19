@@ -9,9 +9,8 @@ from open_spiel.python import rl_environment
 # Assuming you have the following functions implemented:
 # initialize_randomly_joint_policy, game.play_one_episode, modify_rewards, optimize_regularized_objective_function, convergence
 
-# RepeatedGame is assumed to be defined somewhere
 
-Policy = List[List[float]]   # if p is of type Policy, then p[i][a] = p_i(a)
+JointPolicy = List[List[float]]   # if p is of type Policy, then p[i][a] = p_i(a)
 
 class IteratedForel(BaseNFGAlgorithm):
     def __init__(self,
@@ -127,7 +126,7 @@ class IteratedForel(BaseNFGAlgorithm):
     def initialize_randomly_joint_policy(self, 
             n_players : int,
             n_actions : int,
-            ) -> Policy:
+            ) -> JointPolicy:
         """Initializes a joint policy randomly.
 
         Args:
@@ -145,8 +144,8 @@ class IteratedForel(BaseNFGAlgorithm):
     def modify_rewards(self, 
                         returns: List[float],
                         chosen_actions: List[int],
-                        pi: Policy,
-                        mu: Policy,
+                        pi: JointPolicy,
+                        mu: JointPolicy,
                         eta: float,
                     ) -> List[float]:
         """Implements the modification of rewards for the Forel algorithm.
@@ -154,8 +153,8 @@ class IteratedForel(BaseNFGAlgorithm):
         Args:
             returns (List[float]): the rewards obtained by the players
             chosen_actions (List[int]): the actions chosen by the players
-            pi (Policy): the policy used to choose the actions
-            mu (Policy): the regularization policy
+            pi (JointPolicy): the joint policy used to choose the actions
+            mu (JointPolicy): the regularization joint policy
             eta (float): a parameter of the algorithm
 
         Returns:
@@ -197,27 +196,27 @@ class IteratedForel(BaseNFGAlgorithm):
             
 
     def is_similar_enough(self,
-        policy1: Policy,
-        policy2: Policy,
+        joint_policy1: JointPolicy,
+        joint_policy2: JointPolicy,
         threshold: float,
     ) -> bool:
-        """Checks whether two policies are similar enough.
+        """Checks whether two joint policies are similar enough.
 
         Args:
-            policy1 (Policy): the first policy
-            policy2 (Policy): the second policy
+            policy1 (JointPolicy): the first policy
+            policy2 (JointPolicy): the second policy
             threshold (float): the threshold for the similarity check
 
         Returns:
             bool: True if the policies are similar enough, False otherwise
         """
         # Implement the similarity check here
-        n_players = len(policy1)
-        n_actions = len(policy1[0])
+        n_players = len(joint_policy1)
+        n_actions = len(joint_policy1[0])
         
         for i in range(n_players):
             for a in range(n_actions):
-                if abs(policy1[i][a] - policy2[i][a]) > threshold:
+                if abs(joint_policy1[i][a] - joint_policy2[i][a]) > threshold:
                     return False
         return True
     
