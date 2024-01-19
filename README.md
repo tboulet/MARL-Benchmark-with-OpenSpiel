@@ -122,6 +122,6 @@ For training your algorithms on a IndependentRL settings and in parallel (e.g. `
 python run_independentRL.py agents=three_base_rl_agents env=connect_four
 ```
 
-The agents tag should correspond to a configuration in ``configs/agents/`` where you can specify the group of agents. Each group of agents is trained in parallel in an IndependentRL settings.
+The agents tag should correspond to a configuration in ``configs_independentRL/agents/`` where you can specify the group of agents. Each group of agents is trained in parallel in an IndependentRL settings.
 
-We use Hydra as our config system. The config folder is `./configs`. You can modify the config (logging, metrics, number of training episodes) from the `independentRL_default.yaml` file. The available algorithms are in the `algos/algo` sub-folder and the available environments are in the `env` sub-folder.
+We use Hydra as our config system. The config folder is `./configs_independentRL`. You can modify the config (logging, metrics, number of training episodes) from the `independentRL_default.yaml` file. The available algorithms are in the `algos/algo` sub-folder and the available environments are in the `env` sub-folder.

@@ -254,7 +254,7 @@ class IndependentRL_Algorithm:
                         
                         
                         
-@main(version_base=None, config_path="configs", config_name="independentRL_default.yaml")
+@main(version_base=None, config_path="configs_independentRL", config_name="independentRL_default.yaml")
 def main(config: DictConfig):
     print(OmegaConf.to_yaml(config))
     config = OmegaConf.to_container(config, resolve=True)
