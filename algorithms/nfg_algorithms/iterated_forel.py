@@ -5,12 +5,8 @@ from algorithms.nfg_algorithms.base_nfg_algorithm import BaseNFGAlgorithm
 
 from open_spiel.python import rl_environment
 
-
-# Assuming you have the following functions implemented:
-# initialize_randomly_joint_policy, game.play_one_episode, modify_rewards, optimize_regularized_objective_function, convergence
-
-
-JointPolicy = List[List[float]]   # if p is of type Policy, then p[i][a] = p_i(a)
+Policy = List[float]
+JointPolicy = List[Policy]   # if p is of type Policy, then p[i][a] = p_i(a)
 
 class IteratedForel(BaseNFGAlgorithm):
     def __init__(self,
@@ -175,7 +171,7 @@ class IteratedForel(BaseNFGAlgorithm):
     def optimize_regularized_objective_function(self, 
             cum_values : List[List[float]],
             regularizer : str,
-                ) -> List[float]:
+                ) -> Policy:
         """Apply dynamics
 
         Args:
@@ -183,7 +179,7 @@ class IteratedForel(BaseNFGAlgorithm):
             regularizer (str): the regularizer function tag
 
         Returns:
-            List[float]: an agent-policy that is the result of the optimization step
+            Policy: an agent-policy that is the result of the optimization step
         """
         if regularizer == "entropy":
             exp_cum_values = np.exp(cum_values)
