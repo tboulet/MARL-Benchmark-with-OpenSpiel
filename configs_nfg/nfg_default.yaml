@@ -1,0 +1,15 @@
+# Training configuration for inRL
+seed: Null
+verbose: 2
+tqdm_bar : True
+do_wandb: True
+do_tb : True
+do_cli : False
+n_episodes_training: 100000
+
+
+
+
+defaults:
+  - algo : iterated_forel
+  - game : mp

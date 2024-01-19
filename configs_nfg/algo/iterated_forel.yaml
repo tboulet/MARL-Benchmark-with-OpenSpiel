@@ -1,0 +1,7 @@
+algo_name : iterated_forel
+algo_config :
+  n_iterations_max : 10
+  n_timesteps_per_iterations : 100
+  n_monte_carlo_q_evaluation : 10
+  eta : 0.1
+  regularizer : entropy
