@@ -1,9 +1,12 @@
 # This file contains the configuration for grouping the agents.
 # This is a dictionnary with key being the group name and value being a list of agents.
 
-dqn_grp :
-  - dqn
-ppo_grp :
-  - ppo
-a2c_grp :
-  - a2c
+name: "(dqn,dqn)(ppo,ppo)(a2c,a2c)"
+
+group_names_to_grouped_agents_names:
+  dqn_grp :
+    - dqn
+    - dqn
+  ppo_grp :
+    - ppo
+    - ppo

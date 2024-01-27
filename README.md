@@ -8,7 +8,8 @@ The codebase is in Python, in particular we use Pytorch as our deep learning fra
 # Goals
 
 Currently, we have the following goals for this project :
-- IndependentRL Benchmark : Implement a benchmark for IndependentRL algorithms (e.g. Q-Learning, DQN, etc.) on OpenSpiel games, and compare the different algorithms by having them play against each other.
+- IndependentRL Benchmark : Implement a benchmark for IndependentRL algorithms (e.g. Q-Learning, DQN, etc.) on OpenSpiel games, and compare the different algorithms by having them play against each other. This was made as a course project for the [Deep Learning](https://www.master-mva.com/cours/cat-deep-learning/) course at the master MVA (Ens Paris-Saclay).
+- Algorithms for Normal Form Games : Implement algorithms for normal form games (e.g. fictitious play, etc.) and compare them on OpenSpiel games.
 
 
 # Installation
@@ -79,7 +80,7 @@ pip install -r requirements.txt
 ```
 
 ### Install Jax
-
+This step may be unecessary for running non-Jax algorithms. If you want to run Jax algorithms, you need to install Jax with CUDA support. For this, you can run the following command :
 ```
 pip install "jax[cuda11_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 ```
@@ -105,23 +106,29 @@ Note : for Pylance to detect the open_spiel package, you can add ./open_spiel to
 - For using the exploitability metric, you need to modify in ``open_spiel/open_spiel/python/algorithms/exploitability.py`` line 200 the ``on_policy_values`` into an array through ``on_policy_values = np.array(on_policy_values)``.
 
 
-# Get used to the OpenSpiel framework
-
-I suggest watching the [2022 OpenSpiel tutorial](https://www.youtube.com/watch?v=8NCPqtPwlFQ&ab_channel=MarcLanctot) and reading the [OpenSpiel repo](https://github.com/google-deepmind/open_spiel/tree/master) and try to follow the tutorial from `./open_spiel/`.
-
-For understanding the code, notebooks can be found in `open_spiel/open_spiel/colabs` and files can be found in `open_spiel/open_spiel/python/examples`.
-
-
 
 # Run the code
-
-## IndependentRL 
+ 
 For training your algorithms on a IndependentRL settings and in parallel (e.g. `dqn`, `ppo`, `a2c`) on a certain environment/game (e.g. `tic_tac_toe`, `connect_four`), run the command :
 
 ```bash
-python run_independentRL.py agents=three_base_rl_agents env=connect_four
+python run_independentRL.py env=tic_tac_toe
 ```
 
-The agents tag should correspond to a configuration in ``configs_independentRL/agents/`` where you can specify the group of agents. Each group of agents is trained in parallel in an IndependentRL settings.
+The agents tag should correspond to a configuration in ``configs_independentRL/agents/`` where you can specify the group of agents. Each group of agents is trained separately of the other groups of agents, in an IndependentRL settings.
 
 We use Hydra as our config system. The config folder is `./configs_independentRL`. You can modify the config (logging, metrics, number of training episodes) from the `independentRL_default.yaml` file. The available algorithms are in the `algos/algo` sub-folder and the available environments are in the `env` sub-folder.
+
+You can specify the grouped agents configuration, the environment (game), the metrics (winrate against random, faceoff, exploitability...) and the logging (WandB, tensorboard) and other training parameters in the config file. We advise you to not use the exploitability metric on Connect4, as it is extremely slow to compute.
+
+## Visualize the results
+
+You can access the results both on tensorboard :
+
+```bash
+tensorboard --logdir ./tensorboard
+```
+
+And on your WandB account, where a project named "IndependentRL Benchmark" should have been created. 
+
+Alternatively, you can also access our results on this Wandb project : https://wandb.ai/tboulet/IndependentRL%20Benchmark. We advise you to log to your own WandB account which will allow you to group wandb runs by ``env.name`` and then display only one game at a time in order to compare metrics game by game.

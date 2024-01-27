@@ -5,12 +5,53 @@ tqdm_bar : True
 do_wandb: True
 do_tb : True
 do_cli : False
-n_episodes_training: 100000
+n_episodes_training: 500000
 
 
+agents :
+  name: "(dqn,dqn)(ppo,ppo)(a2c,a2c)"
+  group_names_to_grouped_agents_names:
+    dqn_grp :
+      - dqn
+      - dqn
+    ppo_grp :
+      - ppo
+      - ppo
+    a2c_grp :
+      - a2c
+      - a2c
+
+
+metric_list:
+  metric:
+    episode_idx:
+      name: episode_idx
+      config: 
+        eval_frequency: 5000
+    
+    vs_random:
+      name: vs_random
+      config: 
+        eval_frequency: 20000
+        n_episodes_evaluation: 500
+        evaluated_player_id: 0
+    
+    inter_algo_faceoff:
+      name: inter_algo_faceoff
+      config: 
+        eval_frequency: 20000
+        n_episodes_evaluation: 500
+        game_name: ${env.name}
+        game_config: ${env.config}
+    
+    exploitability:
+      name: exploitability
+      config:
+        eval_frequency: 50000
+
+    
+    
 
 
 defaults:
-  - agents : three_base_rl_agents
-  - metric_list : main_metrics
-  - env : connect_four
+  - env : tic_tac_toe
